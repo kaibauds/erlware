@@ -1,0 +1,6 @@
+-sname user_fifo
+
+-setcookie user_fifo_cookie
+
++K true
++A30
