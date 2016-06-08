@@ -43,7 +43,7 @@ start_link( Par={_ConnectionId, _PersistorId}) ->
 %% @end
 %%--------------------------------------------------------------------
 init([{ConnectionId, PersistorId}]) ->
-	{ok, {{one_for_one, 1, 2}, [ ?CHILD( {user_fifo_channel, ConnectionId},
+	{ok, {{rest_for_one, 1, 2}, [ ?CHILD( {user_fifo_channel, ConnectionId},
 					       user_fifo_channel,
 					       worker,
 					       [{ConnectionId, PersistorId}]),

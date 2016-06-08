@@ -1,5 +1,0 @@
-[0;32m===> Verifying dependencies...
-[0m[0;32m===> Compiling user_fifo
-[0m[0;35m===> The rebar3 shell is a development tool; to deploy applications in production, consider using releases (http://www.rebar3.org/v3.0/docs/releases)
-[0mEshell V6.2  (abort with ^G)
-1> 

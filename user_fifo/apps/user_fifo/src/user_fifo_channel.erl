@@ -29,7 +29,6 @@ start_link(Par={ConnectionId, PersistorId}) ->
 %%%===================================================================
 
 init([{ConnectionId, PersistorId}]) ->
-	timer:sleep(2000),
 	{ok, #state{connectionId= ConnectionId, persistorId= PersistorId }}.
 
 handle_call(_Request, _From, State) ->

@@ -31,7 +31,7 @@ start_link(Port) ->
 %%%===================================================================
 
 init(Port) ->
-	timer:sleep(2000),
+%%	timer:sleep(1000),
 	Listen_socket = listen(Port),
 	accepting_client(),
 	{ok, #state{listen_socket=Listen_socket, clients= dict:new()}}.
