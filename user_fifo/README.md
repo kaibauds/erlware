@@ -28,6 +28,8 @@ Method 1:
 
 Use linux command: "nc"
 
+$ nc localhost 48088
+
 in message1
 
 done
@@ -62,11 +64,11 @@ user_fifo_test
 
 2> Sock1= T:connect().
 
-#Port<0.18433>
+\#Port<0.18433>
 
 3> Sock2= T:connect().
 
-#Port<0.18487>
+\#Port<0.18487>
 
 4> T:in(Sock1, <<"message 1 for client 1">>).
 
