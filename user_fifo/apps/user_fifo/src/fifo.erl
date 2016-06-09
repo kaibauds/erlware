@@ -22,7 +22,9 @@
 start_link( {ConnectionId, PersistorId} ) ->
 	{ok, FifoId}= gen_server:start_link(?MODULE, [{ConnectionId, simple_queue, PersistorId}], []),
 	gen_server:cast(PersistorId, { 'hook fifo', {ConnectionId, FifoId} }),
-	{ok, FifoId}.
+	{ok, FifoId};
+start_link( Qmod ) ->
+	gen_server:start_link(?MODULE, [Qmod], []).
 
 in(FifoId, Element) ->
 	gen_server:cast(FifoId, {in, Element}).
@@ -34,15 +36,15 @@ out(FifoId) ->
 %%% gen_server callbacks
 %%%===================================================================
 
-init([{Qmod}]) ->
-	{ok, #state{qmod=Qmod, persistor=underfined, q=Qmod:new()}};
 init([{User, Qmod, Persistor}]) ->
 	{ok, #state{user=User, qmod=Qmod, persistor=Persistor, 
 		    q= case gen_server:call(Persistor, {retrieve, User}) of
 			       undefined -> Qmod:new();
 			       Q -> Q
 		       end
-		   }}.
+		   }};
+init([Qmod]) ->
+	{ok, #state{qmod=Qmod, persistor=underfined, q=Qmod:new()}}.
 
 handle_call( out, _From, State=#state{qmod=Qmod, q=Q} ) ->
 	case Qmod:out(Q) of

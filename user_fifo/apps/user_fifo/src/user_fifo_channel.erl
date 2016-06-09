@@ -44,16 +44,16 @@ handle_cast(receiving, State=#state{connectionId=ConnectionId, fifoId=FifoId}) -
 			      {noreply, State};
 		{error, Reason} -> 
 			gen_tcp:close(ConnectionId),
-			exit(FifoId, {shutdown,Reason} ),
-			{stop, {shutdown, Reason}, State}
+			exit(FifoId, Reason),
+			{stop, Reason, State}
 	end;
-handle_cast({ process, <<"in: ", Message/bytes>> }, State=#state{fifoId=FifoId}) ->
+handle_cast({ process, <<"in ", Message/bytes>> }, State=#state{fifoId=FifoId}) ->
 	case catch(gen_server:call( FifoId, {in, Message} )) of
 		ok -> answer('input done');
 		_ -> ok
 	end,
 	{noreply, State};
-handle_cast({ process, <<"out">> }, State=#state{fifoId=FifoId}) ->
+handle_cast({ process, <<"out", _/bytes>> }, State=#state{fifoId=FifoId}) ->
 	case catch(gen_server:call( FifoId, out )) of
 		{ok, empty} ->
 			answer(empty);
@@ -68,11 +68,11 @@ handle_cast({ process, _ }, State) ->
 handle_cast({ answer, AnswerFromFifo }, State=#state{connectionId=ConnectionId}) ->
 	AnswerToClient= 
 	case AnswerFromFifo of
-		'input done' -> <<"done">>;
-		{ 'output done', Message } -> Message;
-		empty -> <<"(no more message)">>;
-		illegal -> <<"(unknown command)">>;
-		_ -> <<"(something is wrong)">>
+		'input done' -> <<"done\n">>;
+		{ 'output done', Message} -> Message;
+		empty -> <<"(no more message)\n">>;
+		illegal -> <<"(unknown command)\n">>;
+		_ -> <<"(something is wrong)\n">>
 	end,
 	gen_tcp:send(ConnectionId, AnswerToClient),
 	receiving(),
