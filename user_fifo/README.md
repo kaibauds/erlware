@@ -12,7 +12,7 @@ user_fifo_server is a coordinator and persistor implemeted with Erlang/OTP gen_s
 
 user_fifo_all_channels_sup is an Erlang/OTP supervisor that monitors all the user channels.
 
-user_info_channle_sup is a supervisor, which will be created for each client channel, and it will start two workers: the channel and the fifo.
+user_info_channle_sup is a supervisor, which will be created for each client channel, and it will start two workers: the channel and the fifo both are 'gen_server'.
 
 fifo uses a simple queue implemention to serve two basic FIFO operation: in and out.
 
