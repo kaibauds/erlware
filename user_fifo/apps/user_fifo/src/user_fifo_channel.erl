@@ -38,13 +38,12 @@ handle_call(_Request, _From, State) ->
 handle_cast({'hook fifo', FifoId}, State) ->
 	receiving(),
 	{noreply, State#state{fifoId=FifoId}};
-handle_cast(receiving, State=#state{connectionId=ConnectionId, fifoId=FifoId}) ->
+handle_cast(receiving, State=#state{connectionId=ConnectionId}) ->
 	case gen_tcp:recv(ConnectionId, 0) of
 		{ok, Data} -> process(Data),
 			      {noreply, State};
 		{error, Reason} -> 
 			gen_tcp:close(ConnectionId),
-			exit(FifoId, Reason),
 			{stop, Reason, State}
 	end;
 handle_cast({ process, <<"in ", Message/bytes>> }, State=#state{fifoId=FifoId}) ->
@@ -61,6 +60,9 @@ handle_cast({ process, <<"out", _/bytes>> }, State=#state{fifoId=FifoId}) ->
 			answer({'output done', Message});
 		_ -> ok
 	end,
+	{noreply, State};
+handle_cast({ process, <<"exit", _/bytes>> }, State=#state{connectionId=ConnectionId, persistorId= PersistorId}) ->
+	gen_server:cast(PersistorId, { 'drop connectionId', ConnectionId }),
 	{noreply, State};
 handle_cast({ process, _ }, State) ->
 	answer(illegal),
@@ -81,9 +83,11 @@ handle_cast(_Msg, State) ->
 	{noreply, State}.
 
 handle_info(_Info, State) ->
+	io:format("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-~nhey, received something: ~w~n", [_Info]),
 	{noreply, State}.
 
 terminate(_Reason, _State) ->
+	io:format("---------------------------------~nhey, termination is running for the reason: ~w~n", [_Reason]),
 	ok.
 
 code_change(_OldVsn, State, _Extra) ->

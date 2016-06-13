@@ -25,18 +25,24 @@
 start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-start_channel_sup({ConnectionId, PersistorId}) ->
-	supervisor:start_child(?MODULE, ?CHILD( {channel, ConnectionId}, 
-						user_fifo_channel_sup,
-						supervisor,
-						[{ConnectionId, PersistorId}]) ).
+start_channel_sup(Par={_ConnectionId, _PersistorId}) ->
+	case supervisor:start_child(?MODULE, [Par]) of
+		{ok, X} -> X;
+		{ok, Y, _} -> Y
+	end.
 
 %%%===================================================================
 %%% Supervisor callbacks
 %%%===================================================================
 
 init([]) ->
-	{ok, {{one_for_one, 1, 2}, []}}.
+	{ok, {{simple_one_for_one, 1, 2}, 
+	      [
+	       ?CHILD( ignored, 
+		       user_fifo_channel_sup,
+		       supervisor,
+		       []) 
+	      ]}}.
 
 %%%===================================================================
 %%% Internal functions

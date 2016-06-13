@@ -52,12 +52,15 @@ handle_cast(accepting_client, State=#state{listen_socket=Listen_socket}) ->
 	PersistorId= self(),
 	proc_lib:spawn( fun()-> ConnectionId = accept_connection(Listen_socket),
 				ok= gen_tcp:controlling_process( ConnectionId, PersistorId ),
-				gen_server:cast( PersistorId, {'new client', ConnectionId} ),
-				user_fifo_all_channels_sup:start_channel_sup({ConnectionId, PersistorId}),
+				gen_server:cast( PersistorId, {'new connection', ConnectionId} ),
+				_Channel_sup_id = user_fifo_all_channels_sup:start_channel_sup(
+						   {ConnectionId, PersistorId}
+						  ),
+%%				gen_server:cast( PersistorId, {'register channel supvisor' , {ConnectionId, Channel_sup_id}} ),
 				accepting_client()
 			end ),
 	{noreply, State};
-handle_cast( {'new client', ConnectionId}, State=#state{clients=Clients}) ->
+handle_cast( {'new connection', ConnectionId}, State=#state{clients=Clients}) ->
 	{noreply, State#state{clients=dict:store(ConnectionId, {undefined, undefined, undefined}, Clients)} };
 handle_cast( {'hook fifo', {ConnectionId, FifoId}}, State=#state{clients=Clients}) ->
 	case dict:find( ConnectionId, Clients ) of
