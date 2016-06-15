@@ -1,8 +1,10 @@
-user_fifo
+user_fifo 
 =====
 
 An Erlang/OTP application that provides FIFO queuing service for each client 
 that connects to this service listening at a TCP port ( default 48088 ).
+
+This version doesn't require user's login.  When the TCP connection is closed, the FIFO data for this connection will be destroyed ant there's no way to restore these data.
 
 
 Design
