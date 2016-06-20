@@ -22,7 +22,7 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-start_link( Par={_ConnectionId, _PersistorId}) ->
+start_link( Par={_UserId, _ConnectionId, _PersistorId}) ->
     supervisor:start_link(?MODULE, [Par]).
 
 %%%===================================================================
@@ -42,15 +42,15 @@ start_link( Par={_ConnectionId, _PersistorId}) ->
 %%                     {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([{ConnectionId, PersistorId}]) ->
-	{ok, {{rest_for_one, 2, 2}, [ ?CHILD( {user_fifo_channel, ConnectionId},
+init([{UserId, ConnectionId, PersistorId}]) ->
+	{ok, {{rest_for_one, 2, 2}, [ ?CHILD( {user_fifo_channel, UserId},
 					       user_fifo_channel,
 					       worker,
-					       [{ConnectionId, PersistorId}]),
-				       ?CHILD( {fifo, ConnectionId},
+					       [{UserId, ConnectionId, PersistorId}]),
+				       ?CHILD( {fifo, UserId},
 					       fifo,
 					       worker,
-					       [{ConnectionId, PersistorId}])
+					       [{UserId, PersistorId}])
 				     ]}}.
 
 %%%===================================================================

@@ -25,7 +25,7 @@
 start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-start_channel_sup(Par={_ConnectionId, _PersistorId}) ->
+start_channel_sup(Par={_UserId, _ConnectionId, _PersistorId}) ->
 	case supervisor:start_child(?MODULE, [Par]) of
 		{ok, X} -> X;
 		{ok, Y, _} -> Y

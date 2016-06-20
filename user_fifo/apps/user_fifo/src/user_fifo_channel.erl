@@ -13,23 +13,24 @@
 	 terminate/2,
 	 code_change/3]).
 
--record(state, {connectionId, persistorId, fifoId}).
+-record(state, {userId, connectionId, coordinatorId, fifoId}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
-start_link(Par={ConnectionId, PersistorId}) ->
+start_link(Par={UserId, _ConnectionId, CoordinatorId}) ->
 	{ok, ChannelId}= gen_server:start_link(?MODULE, [Par], []),
-	gen_server:cast(PersistorId, { 'hook channel', {ConnectionId, ChannelId} } ),
+	gen_server:cast(CoordinatorId, { 'hook channel', {UserId, ChannelId} } ),
 	{ok, ChannelId}.
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 
-init([{ConnectionId, PersistorId}]) ->
-	{ok, #state{connectionId= ConnectionId, persistorId= PersistorId }}.
+init([{UserId, ConnectionId, CoordinatorId}]) ->
+	process_flag(trap_exit, true),
+	{ok, #state{userId=UserId, connectionId= ConnectionId, coordinatorId= CoordinatorId }}.
 
 handle_call(_Request, _From, State) ->
 	Reply = ok,
@@ -61,8 +62,8 @@ handle_cast({ process, <<"out", _/bytes>> }, State=#state{fifoId=FifoId}) ->
 		_ -> ok
 	end,
 	{noreply, State};
-handle_cast({ process, <<"exit", _/bytes>> }, State=#state{connectionId=ConnectionId, persistorId= PersistorId}) ->
-	gen_server:cast(PersistorId, { 'drop connectionId', ConnectionId }),
+handle_cast({ process, <<"exit", _/bytes>> }, State=#state{userId=UserId, coordinatorId= CoordinatorId}) ->
+	gen_server:cast(CoordinatorId, { 'user logout', UserId }),
 	{noreply, State};
 handle_cast({ process, _ }, State) ->
 	answer(illegal),
@@ -83,11 +84,11 @@ handle_cast(_Msg, State) ->
 	{noreply, State}.
 
 handle_info(_Info, State) ->
-	io:format("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-~nhey, received something: ~w~n", [_Info]),
 	{noreply, State}.
 
-terminate(_Reason, _State) ->
-	io:format("---------------------------------~nhey, termination is running for the reason: ~w~n", [_Reason]),
+terminate(Reason, #state{connectionId=ConnectionId} ) ->
+	gen_tcp:close(ConnectionId),
+	exit(Reason),
 	ok.
 
 code_change(_OldVsn, State, _Extra) ->
