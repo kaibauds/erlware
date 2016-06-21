@@ -37,47 +37,47 @@ Test
 Use "nc" on Linux
 
 ```bash
-$ **nc localhost 48088**
+$ nc localhost 48088
 Please enter a line in the format "log in as <user name>" in a minute or you will be disconnected
-**log in as Kai**
+log in as Kai
 Welcome Kai
-**in message #1**
+in message #1
 done
-**in message #2**
+in message #2
 done
-**in message #3**
+in message #3
 done
-**out**
+out
 message #1
-**exit**
-$ **nc localhost 48088**
+exit
+$ nc localhost 48088
 Please enter a line in the format "log in as <user name>" in a minute or you will be disconnected
-**log in as Kai**
+log in as Kai
 Welcome Kai
-**in message #1**
+in message #1
 done
-**out**
+out
 message #2
-**^Z**
+^Z
 [1]+  Stopped                 nc localhost 48088
-$ **nc localhost 48088**
+$ nc localhost 48088
 Please enter a line in the format "log in as <user name>" in a minute or you will be disconnected
-**log in as Kai**
+log in as Kai
 Welcome Kai
-**in message #1**
+in message #1
 done
-**out**
+out
 message #3
-**out**
+out
 message #1
-**out**
+out
 message #1
-**out**
+out
 (no more message)
-**out**
+out
 (no more message)
-**exit**
-$ **fg**
+exit
+$ fg
 nc localhost 48088
 $
 ```
