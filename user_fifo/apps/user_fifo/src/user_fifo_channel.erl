@@ -39,11 +39,14 @@ handle_call(_Request, _From, State) ->
 handle_cast({'hook fifo', FifoId}, State) ->
 	receiving(),
 	{noreply, State#state{fifoId=FifoId}};
-handle_cast(receiving, State=#state{connectionId=ConnectionId}) ->
+handle_cast(receiving, State=#state{userId=UserId, 
+				    connectionId=ConnectionId, 
+				    coordinatorId= CoordinatorId}) ->
 	case gen_tcp:recv(ConnectionId, 0) of
 		{ok, Data} -> process(Data),
 			      {noreply, State};
 		{error, Reason} -> 
+			gen_server:cast(CoordinatorId, { 'user logout', UserId }),
 			gen_tcp:close(ConnectionId),
 			{stop, Reason, State}
 	end;

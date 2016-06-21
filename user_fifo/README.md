@@ -1,8 +1,8 @@
 user_fifo
-=====
+=========
 
-An Erlang/OTP application that provides FIFO queuing service for each client 
-that connects to this service listening at a TCP port ( default 48088 ).
+**An Erlang/OTP application that provides FIFO queuing service for each client that connects to this service through TCP port ( default 48088 ).**
+**Started from version 0.2, user_fifo supports persisted FIFO queque for clients.**
 
 
 Design
@@ -19,101 +19,66 @@ fifo uses a simple queue implemention to serve two basic FIFO operation: in and 
 Build
 -----
 
+```bash
 $ rebar3 compile
+```
+
+
+Run
+---
+
+```bash
+$ rebar3 shell
+```
 
 Test
------
+----
 
-Method 1: 
+Use "nc" on Linux
 
-Use linux command: "nc"
-
-$ nc localhost 48088
-
-in message1
-
+```bash
+$ **nc localhost 48088**
+Please enter a line in the format "log in as <user name>" in a minute or you will be disconnected
+**log in as Kai**
+Welcome Kai
+**in message #1**
 done
-
-in message2
-
+**in message #2**
 done
-
-out
-
-message1
-
-out
-
-message2
-
-out
-
+**in message #3**
+done
+**out**
+message #1
+**exit**
+$ **nc localhost 48088**
+Please enter a line in the format "log in as <user name>" in a minute or you will be disconnected
+**log in as Kai**
+Welcome Kai
+**in message #1**
+done
+**out**
+message #2
+**^Z**
+[1]+  Stopped                 nc localhost 48088
+$ **nc localhost 48088**
+Please enter a line in the format "log in as <user name>" in a minute or you will be disconnected
+**log in as Kai**
+Welcome Kai
+**in message #1**
+done
+**out**
+message #3
+**out**
+message #1
+**out**
+message #1
+**out**
 (no more message)
-
-out
-
+**out**
 (no more message)
+**exit**
+$ **fg**
+nc localhost 48088
+$
+```
 
-Method 2:
-
-$ rebar3 shell
-
-1> T=user_fifo_test.
-
-user_fifo_test
-
-2> Sock1= T:connect().
-
-\#Port<0.18433>
-
-3> Sock2= T:connect().
-
-\#Port<0.18487>
-
-4> T:in(Sock1, <<"message 1 for client 1">>).
-
-<<"done">>
-
-5> T:in(Sock2, <<"message 1 for client 2">>).
-
-<<"done">>
-
-6> T:in(Sock2, <<"message 2 for client 2">>).
-
-<<"done">>
-
-7> T:in(Sock2, <<"message 3 for client 2">>).
-
-<<"done">>
-
-8> T:in(Sock1, <<"message 2 for client 1">>).
-
-<<"done">>
-
-9> T:out(Sock1).
-
-<<"message 1 for client 1">>
-
-10> T:out(Sock1).
-
-<<"message 2 for client 1">>
-
-11> T:out(Sock1).
-
-<<"(no more message)">>
-
-12> T:out(Sock2).
-
-<<"message 1 for client 2">>
-
-13> T:out(Sock2).
-
-<<"message 2 for client 2">>
-
-14> T:out(Sock2).
-
-<<"message 3 for client 2">>
-
-15> T:out(Sock2).
-
-<<"(no more message)">>
