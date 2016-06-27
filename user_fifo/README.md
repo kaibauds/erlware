@@ -16,6 +16,13 @@ user_info_channle_sup is a supervisor, which will be created for each client cha
 
 fifo uses a simple queue implemention to serve two basic FIFO operation: in and out.
 
+*Note about the up-to-date version:*
+
+There are many ways handling persistence, mnesia for example; however, with current version of 0.2, user_fifo demonstrates the way of using a persistor server.
+With v0.2, the queue will be stored only when the exit of the fifo is expected ( logout ) or trapped so that the code of "terminate" call back will be called. If the process is killed when it's receving (waiting for the message) at the socket, gen_server fifo's "termninate" callback won't be called, so the messages will lost.
+Updating the service to TCP "active" mode to handle the TCP message as Erlang process message may improve it so that the gen_server can stay in state-concisous way so that it may always be able to be closed gracefully.  
+
+
 Build
 -----
 
