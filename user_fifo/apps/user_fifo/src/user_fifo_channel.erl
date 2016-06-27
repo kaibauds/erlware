@@ -47,7 +47,7 @@ handle_cast(receiving, State=#state{userId=UserId,
 			      {noreply, State};
 		{error, Reason} -> 
 			gen_server:cast(CoordinatorId, { 'user logout', UserId }),
-			gen_tcp:close(ConnectionId),
+%%			gen_tcp:close(ConnectionId),
 			{stop, Reason, State}
 	end;
 handle_cast({ process, <<"in ", Message/bytes>> }, State=#state{fifoId=FifoId}) ->

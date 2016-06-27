@@ -38,13 +38,13 @@ out(FifoId) ->
 
 init([{UserId, Qmod, Persistor}]) ->
 	process_flag(trap_exit, true),
-	X={ok, #state{userId=UserId, qmod=Qmod, persistor=Persistor, 
-		    q= case gen_server:call(Persistor, {retrieve, UserId}) of
-			       undefined -> Qmod:new();
-			       Q -> Q
-		       end
-		   }},
-	X;
+	Result= gen_server:call(Persistor, {retrieve, UserId}),
+	if Result=:='not found' ->
+		   {stop, Result};
+	   true ->
+		   Q= case Result of undefined -> Qmod:new(); X -> X end,
+		   {ok, #state{userId=UserId, qmod=Qmod, persistor=Persistor, q= Q }}
+	end;
 init([Qmod]) ->
 	{ok, #state{qmod=Qmod, persistor=underfined, q=Qmod:new()}}.
 

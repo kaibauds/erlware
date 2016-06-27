@@ -36,28 +36,33 @@ init(Port) ->
 	accepting_user(),
 	{ok, #state{listenSock=Listen_socket, users= dict:new()}}.
 
-handle_call( {retrieve, UserId}, FifoId, State=#state{users=Users}) ->
+handle_call( {retrieve, UserId}, _, State=#state{users=Users}) ->
 	case dict:find( UserId, Users ) of
 		error -> 
-			exit(FifoId, shutdown),
-			{reply, ok, State};
+			{reply, 'not found', State};
 		{ok, #userProp{q=Q} } -> 
 			{reply, Q, State}
+	end;
+handle_call( {find_channel, UserId}, _, State=#state{users=Users}) ->
+	case dict:find( UserId, Users ) of
+		error -> 
+			{reply, 'not found', State};
+		{ok, #userProp{channelSup=ChannelSup, connectionId=ConnectionId} } -> 
+			{reply, {ChannelSup, ConnectionId}, State}
 	end;
 handle_call(_Request, _From, State) ->
 	Reply = ok,
 	{reply, Reply, State}.
 
-handle_cast(accepting_user, State=#state{listenSock=Listen_socket, users=Users}) ->
+handle_cast(accepting_user, State=#state{listenSock=Listen_socket}) ->
 	Coordinator= self(),
 	proc_lib:spawn( fun()-> case accept_connection(Listen_socket) of
 					{UserId, ConnectionId} ->
-						case dict:find( UserId, Users ) of
-							{ok, #userProp{channelSup=OldChannelSup, 
-								       connectionId=OldConnectionId}} when OldChannelSup=/=undefined -> 
-								%% elegantly closing the socket to quickly release the connection
-								gen_tcp:close(OldConnectionId),
+						case gen_server:call(Coordinator, {find_channel, UserId}) of
+							{OldChannelSup, _} when OldChannelSup=/=undefined -> 
 								supervisor:terminate_child(user_fifo_all_channels_sup, OldChannelSup);
+							{_, OldConnectionId} when OldConnectionId=/=undefined ->
+								gen_tcp:close(OldConnectionId);
 							_ -> 
 								ok
 						end,
@@ -67,7 +72,7 @@ handle_cast(accepting_user, State=#state{listenSock=Listen_socket, users=Users})
 								   ),
 						ok= gen_tcp:controlling_process( ConnectionId, ChannelSup ),
 						gen_server:cast( Coordinator, {'update channel supervisor', {UserId, ChannelSup}} );
-					_ -> fine
+					_ -> ok
 				end
 			end ),
 	{noreply, State};
@@ -84,8 +89,6 @@ handle_cast( {'new connection', {UserId, ConnectionId}}, State=#state{users=User
 								}, Users)} };
 handle_cast( {'update channel supervisor', {UserId, ChannelSup}}, State=#state{users=Users}) ->
 	{ok,UserProp}=  dict:find( UserId, Users),
-%% accepting users is sequential, so before accepting a new one, the registration of the previous one must be fully done.
-	accepting_user(),
 	{noreply, State#state{users=dict:store(UserId, UserProp#userProp{channelSup=ChannelSup}, Users)} };
 handle_cast( {'user logout', UserId}, State=#state{users=Users}) ->
 	{ok, #userProp{channelSup=ChannelSup}}= dict:find( UserId, Users ),
@@ -131,6 +134,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 accept_connection(LSocket) ->
 	{ok, Socket}= gen_tcp:accept(LSocket),
+	accepting_user(),
 	gen_tcp:send(Socket, <<"Please enter a line in the format \"log in as <user name>\" in a minute or you will be disconnected\n">>),
 	case gen_tcp:recv(Socket, 0, 60*1000) of
 		{ok, <<"log in as ", X/bytes>>} ->
